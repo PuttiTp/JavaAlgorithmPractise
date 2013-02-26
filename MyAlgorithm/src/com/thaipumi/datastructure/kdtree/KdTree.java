@@ -3,11 +3,13 @@ package com.thaipumi.datastructure.kdtree;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+
 public class KdTree <T> {
 	
 	private final int k;
 	private KdNode<T> root;
 	private KdNodeComparator kdNodeComparator = new KdNodeComparator();
+	private int size = 0;
 	
 	public KdTree(final int k) {
 		this.k = k;		
@@ -20,9 +22,9 @@ public class KdTree <T> {
 	}
 
 	public void initTree(ArrayList<T> entities, ArrayList<double[]> positions){
-		int entitiesSize = entities.size();
+		size = entities.size();
 		ArrayList<KdNode<T>> nodes = new ArrayList<KdNode<T>>();
-		for (int i = 0 ; i < entitiesSize; i++){
+		for (int i = 0 ; i < size; i++){
 			nodes.add(new KdNode<T>(entities.get(i), positions.get(i)));
 		}
 		
@@ -111,31 +113,38 @@ public class KdTree <T> {
 	}
 	
 	public void insert(T entity, double position[]){
-		root = insert(root,entity,position, 0);
+		root = insert(root,null,entity,position, 0);
+		size++;
 	}
 	
-	private KdNode<T> insert(KdNode<T> node, T entity, double position[], int splitDimension){
+	private KdNode<T> insert(KdNode<T> node, KdNode<T> parent, T entity, double position[], int splitDimension){
 		if (node == null) { 
 			// insert new node here.
 			node = new KdNode<T>(entity, position, splitDimension);
+			node.parent = parent;
 		}
 		else if (node.getEntity().equals(entity)) { 
 			// duplicate data
+			size--;
 			return node;
 		}
 		else if (node.isLesser(position)) { 
 			// go to lesser site of tree
-			node.lesser = insert(node.lesser,entity,position, (splitDimension+1)%k);
+			node.lesser = insert(node.lesser,node,entity,position, (splitDimension+1)%k);
 		}
 		else { 
 			// go to non lesser than site.
-			node.greater = insert(node.greater,entity,position, (splitDimension+1)%k);
+			node.greater = insert(node.greater,node,entity,position, (splitDimension+1)%k);
 		}
 		return node;
 	}
 	
 	public boolean remove(T entity, double position[]){
-		return remove(getNode(entity, position));
+		if (remove(getNode(entity, position))) {
+			size--;
+			return true;
+		}
+		return false;
 	}
 	
 	private boolean remove(KdNode<T> node){
@@ -144,13 +153,14 @@ public class KdTree <T> {
 		KdNode<T> tmpNode;
 		if (node.greater != null) {
 			tmpNode = findMinKdNode(node.greater, null, node.getSplitDimension());
+			remove(tmpNode);
 		} else {
 			tmpNode = findMinKdNode(node.lesser, null, node.getSplitDimension());
+			remove(tmpNode);
 			node.greater = node.lesser;
 			node.lesser = null;
 		}
 
-		remove(tmpNode);
 		
 		if (node.parent == null) {
 			// This node is root;
@@ -165,9 +175,16 @@ public class KdTree <T> {
 		}
 		
 		if (tmpNode != null) {
+			tmpNode.setSplitDimension(node.getSplitDimension());
 			tmpNode.parent = node.parent;
 			tmpNode.lesser = node.lesser;
+			if (tmpNode.lesser != null) {
+				tmpNode.lesser.parent = tmpNode;
+			}
 			tmpNode.greater = node.greater;
+			if (tmpNode.greater != null) {
+				tmpNode.greater.parent = tmpNode;
+			}
 		}
 		
 		return true;
@@ -199,8 +216,7 @@ public class KdTree <T> {
 		
 		if (node.isLesser(position)) {
 			return getNode(node.lesser,entity,position);
-		} 
-		
+		}
 		return getNode(node.greater,entity,position);
 	}
 	
@@ -209,8 +225,17 @@ public class KdTree <T> {
 	private double[] minPosValue, maxPosValue, tarketPosition;
 	private double minRangeSquare;
 	private KdNode<T> nearestNode;
+	private KdNode<T> secondNearestNode;
 	
-	public KdNode<T> findNearestNode(double position[]){
+
+	
+	public T findNearestEntity(double position[]){
+		findNearestNode(position);
+		if (nearestNode == null) return null;
+		return nearestNode.getEntity();
+	}
+	
+	private KdNode<T> findNearestNode(double position[]){
 		nearestNode = null;
 		minRangeSquare = Double.MAX_VALUE;
 		tarketPosition = position;
@@ -219,6 +244,7 @@ public class KdTree <T> {
 	}
 	
 	private void findNearestNode( KdNode<T> node ) {
+		if (node == null) return;
 		int compareDimension = node.getSplitDimension();
 		double tmpMinPos = minPosValue[compareDimension];
 		double tmpMaxPos = maxPosValue[compareDimension];
@@ -259,6 +285,64 @@ public class KdTree <T> {
 		
 	}
 	
+	public T findSecondNearestEntity(double position[]){
+		findSecondNearestNode(position);
+		if (secondNearestNode == null) return null;
+		return secondNearestNode.getEntity();
+	}
+	
+	private KdNode<T> findSecondNearestNode(double position[]){
+		secondNearestNode = null;
+		minRangeSquare = Double.MAX_VALUE;
+		tarketPosition = position;
+		findSecondNearestNode(root);
+		return secondNearestNode;
+	}
+	
+	private void findSecondNearestNode( KdNode<T> node ) {
+
+		if (node == null) return;
+		int compareDimension = node.getSplitDimension();
+		double tmpMinPos = minPosValue[compareDimension];
+		double tmpMaxPos = maxPosValue[compareDimension];
+		if (!node.equals(nearestNode)) {
+			double disSquare = distanceSquare(tarketPosition, node.getPosition());
+			if (disSquare < minRangeSquare) {
+				minRangeSquare = disSquare;
+				secondNearestNode = node;
+			}
+		}
+		
+		if (node.isLesser(tarketPosition)) {
+			if (node.lesser != null) {
+				maxPosValue[compareDimension] = node.getPosition()[compareDimension];
+				findSecondNearestNode(node.lesser);
+				maxPosValue[compareDimension] = tmpMaxPos;
+			}
+			if (node.greater != null) {
+				minPosValue[compareDimension] = node.getPosition()[compareDimension];
+				if (isInRange()) {
+					findSecondNearestNode(node.greater);
+				}
+				minPosValue[compareDimension] = tmpMinPos;
+			}
+		} else {
+			if (node.greater != null) {
+				minPosValue[compareDimension] = node.getPosition()[compareDimension];
+				findSecondNearestNode(node.greater);
+				minPosValue[compareDimension] = tmpMinPos;
+			}
+			if (node.lesser != null) {
+				maxPosValue[compareDimension] = node.getPosition()[compareDimension];
+				if (isInRange()) {
+					findSecondNearestNode(node.lesser);
+				}
+				maxPosValue[compareDimension] = tmpMaxPos;
+			}
+		}
+		
+	}
+	
 	private double distanceSquare(double p1[] , double p2[]){
 		double ans = 0,d;
 		for (int i = 0 ; i < k ; i++){
@@ -281,5 +365,40 @@ public class KdTree <T> {
 		}
 		
 		return tmpRangeSquare < minRangeSquare;
+	}
+	
+	public int size(){
+		return size;
+	}
+	
+	public ArrayList<T> getEntityArrayList(){
+		ArrayList<T> entities = new ArrayList<T>();
+		
+		addToList(root,entities);
+		
+		return entities;
+	}
+	
+	private void addToList(KdNode<T> node, ArrayList<T> entities){
+		if (node == null) return;
+		entities.add(node.getEntity());
+		addToList(node.lesser, entities);
+		addToList(node.greater, entities);
+	}
+	
+	public void clear(){
+		root = null;
+		size = 0;
+	}
+
+	public int getHeight() {
+		return getHeight(root);
+	}
+	
+	private int getHeight(KdNode<T> node) {
+		if (node == null) return 0;
+		int l = getHeight(node.lesser);
+		int g = getHeight(node.greater);
+		return ((l>g)? l:g)+1;
 	}
 }

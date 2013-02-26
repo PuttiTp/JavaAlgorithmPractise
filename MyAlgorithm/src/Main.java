@@ -26,7 +26,7 @@ public class Main {
 		
 		long time1 = System.currentTimeMillis();
 		for (int i = 0 ; i < test.length ; i++){
-			double ans1[] = kdTree.findNearestNode(test[i]).getEntity();
+			double ans1[] = kdTree.findNearestEntity(test[i]);
 		}
 		time1 = System.currentTimeMillis() - time1;
 

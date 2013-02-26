@@ -5,9 +5,9 @@ public class KdNode <T> {
 	private double[] position;
 	private int splitDimension;
 	
-	public KdNode<T> parent;
-	public KdNode<T> lesser;
-	public KdNode<T> greater;
+	public KdNode<T> parent = null;
+	public KdNode<T> lesser = null;
+	public KdNode<T> greater = null;
 	
 	public KdNode(T entity, double[] position, int splitDimension){
 		this.entity = entity;
