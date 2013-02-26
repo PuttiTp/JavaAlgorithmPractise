@@ -16,8 +16,8 @@ public class KdTree <T> {
 		maxPosValue = new double[k];
 		minPosValue = new double[k];
 		for (int i = 0 ; i < k ;i++){
-			maxPosValue[i] = Double.MAX_VALUE;
-			minPosValue[i] = Double.MIN_VALUE;
+			maxPosValue[i] = Double.POSITIVE_INFINITY;
+			minPosValue[i] = Double.NEGATIVE_INFINITY;
 		}
 	}
 
