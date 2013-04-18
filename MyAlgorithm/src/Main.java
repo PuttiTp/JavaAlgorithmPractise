@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 import com.thaipumi.datastructure.kdtree.KdTree;
 
 
@@ -10,12 +12,16 @@ public class Main {
 		System.out.println("Hello world");
 		double signals[][] = new double[1000][2];
 		KdTree<double[]> kdTree = new KdTree<double[]>(signals[0].length);
+		ArrayList<double[]> toKdTree = new ArrayList<double[]>();
 		for (int i = 0 ;i < signals.length ;i++){
 			for (int j = 0 ; j< signals[i].length; j++){
 				signals[i][j] = Math.random()*100-200;
 			}
-			kdTree.insert(signals[i], signals[i]);
+			toKdTree.add(signals[i]);
 		}
+
+		kdTree.initTree(toKdTree, toKdTree);
+		
 		int clearcount = 0;
 		double test[][] = new double[1000][signals[0].length];
 		for (int i = 0 ; i < test.length ; i++){

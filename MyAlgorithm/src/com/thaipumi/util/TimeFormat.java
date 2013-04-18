@@ -38,7 +38,7 @@ public class TimeFormat {
 			} else {
 				is = true;
 			}
-			ans += getString(days,"day");
+			ans += days+"d";
 		}
 		if (is || hours != 0) {
 			if (is){
@@ -46,7 +46,7 @@ public class TimeFormat {
 			} else {
 				is = true;
 			}
-			ans += getString(hours,"hour");
+			ans += hours+"h";
 		}
 		if (is || minutes != 0) {
 			if (is){
@@ -54,7 +54,7 @@ public class TimeFormat {
 			} else {
 				is = true;
 			}
-			ans += getString(minutes,"minute");
+			ans += minutes+"m";
 		}
 		if (is || seconds != 0) {
 			if (is){
@@ -62,7 +62,7 @@ public class TimeFormat {
 			} else {
 				is = true;
 			}
-			ans += getString(seconds,"second");
+			ans += seconds+"s";
 		}
 		if (is || milisecs != 0) {
 			if (is){
@@ -70,14 +70,10 @@ public class TimeFormat {
 			} else {
 				is = true;
 			}
-			ans += getString(milisecs,"milisecond");
+			ans += milisecs+"ms";
 		}
 		return ans;
 	}
 	
-	private String getString(long num, String unit) {
-		String ans = num + " "+unit;
-		if (num > 1) ans+="s";
-		return ans;
-	}
+
 }

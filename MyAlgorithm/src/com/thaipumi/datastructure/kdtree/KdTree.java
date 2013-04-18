@@ -84,7 +84,9 @@ public class KdTree <T> {
 				lessers.clear();
 			}
 		}
-		greaters.add(selectIndexNode(lessers,lessers.size()/2));
+		if (lessers.size() > 0) {
+			greaters.add(selectIndexNode(lessers,lessers.size()/2));
+		}
 		KdNode<T> node = selectIndexNode(greaters,greaters.size()/2);
 		
 		lessers.clear();
@@ -106,7 +108,7 @@ public class KdTree <T> {
 		} 
 		
 		if (lessers.size() < lesserNum) {
-			return selectIndexNode(greaters,lesserNum - lessers.size());
+			return selectIndexNode(greaters,lesserNum - lessers.size() -1);
 		}
 		
 		return node;
